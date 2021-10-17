@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="indobenchmark-toolkit",
-    version="0.0.1",
+    version="0.0.3",
     author="Samuel Cahyawijaya",
     author_email="samuel.cahyawijaya@gmail.com",
     description="Indobenchmark toolkit for supporting IndoNLU and IndoNLG",

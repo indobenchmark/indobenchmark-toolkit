@@ -122,7 +122,7 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         When `model_type` is indogpt, `lang_token`, `decoder_inputs`, and `decoder_lang_token` parameters will be ignored 
         and the input will be encoded in the gpt2 sequence format as follow: 
         
-        - indogpt sequence: ``<s> X </s>``
+        - indogpt sequence: ``<s> X``
         
         When `model_type` is indobart, `inputs` and `lang_token` are used as the sequence and language identifier for the indobart encoder, 
         while `decoder_inputs` and `decoder_lang_token` are used as the sequence and language identifier of the decoder
@@ -152,12 +152,12 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         if model_type == 'indogpt':
             # Process indogpt input
             if type(inputs) == str:
-                 return self(f'<s> {inputs} </s>', padding=padding, return_tensors=return_tensors)
+                 return self(f'<s> {inputs}', padding=padding, return_tensors=return_tensors)
             elif type(inputs) == list:
                 if len(inputs) == 0 or type(inputs[0]) != str:
                     raise ValueError(IndoNLGTokenizer.input_error_message)
                 else:
-                    return self([f'<s> {input_data} </s>' for input_data in inputs], padding=padding, return_tensors=return_tensors)
+                    return self([f'<s> {input_data}' for input_data in inputs], padding=padding, return_tensors=return_tensors)
             else:
                 raise ValueError(IndoNLGTokenizer.input_error_message)
         elif model_type == 'indobart':
@@ -196,9 +196,9 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
                 decoder_input_batch = self(decoder_inputs, return_attention_mask=False)
                 
                 if type(decoder_inputs) == str:
-                    decoder_input_batch['input_ids'] = [self.eos_token_id, lang_id] + decoder_input_batch['input_ids'] 
+                    decoder_input_batch['input_ids'] = [lang_id] + decoder_input_batch['input_ids']  + [self.eos_token_id]
                 else:
-                    decoder_input_batch['input_ids'] = list(map(lambda input_ids: input_ids + [self.eos_token_id, lang_id], decoder_input_batch['input_ids']))
+                    decoder_input_batch['input_ids'] = list(map(lambda input_ids: [lang_id] + input_ids + [self.eos_token_id], decoder_input_batch['input_ids']))
                 
                 # Padding
                 input_batch = self.pad(input_batch, return_tensors=return_tensors)
@@ -280,16 +280,12 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         self.sp_model = spm.SentencePieceProcessor(**self.sp_model_kwargs)
         self.sp_model.Load(self.vocab_file)
 
-    def convert_tokens_to_string(self, tokens):
-        """Converts a sequence of tokens (strings for sub-words) in a single string."""
-        return self.sp_model.decode(tokens)
-
     def decode(self, inputs, skip_special_tokens=False):
         prev_val = self.decode_special_token
         self.decode_special_token = not skip_special_tokens
         
-        outputs = super().decode(inputs, skip_special_tokens=skip_special_tokens)
+        outputs = super().decode(inputs, skip_special_tokens=False)
         self.decode_special_token = prev_val
         
-        return outputs
+        return outputs.replace('▁','').strip()
         
