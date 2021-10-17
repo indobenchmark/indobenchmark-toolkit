@@ -5,16 +5,16 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="indobenchmark",
+    name="indobenchmark-toolkit",
     version="0.0.1",
     author="Samuel Cahyawijaya",
     author_email="samuel.cahyawijaya@gmail.com",
     description="Indobenchmark toolkit for supporting IndoNLU and IndoNLG",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/SamuelCahyawijaya/indobenchmark_toolkit",
+    url="https://github.com/SamuelCahyawijaya/indobenchmark-toolkit",
     project_urls={
-        "Bug Tracker": "https://github.com/SamuelCahyawijaya/indobenchmark_toolkit/issues",
+        "Bug Tracker": "https://github.com/SamuelCahyawijaya/indobenchmark-toolkit/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3",
