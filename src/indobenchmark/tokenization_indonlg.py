@@ -30,15 +30,15 @@ VOCAB_FILES_NAMES = {"vocab_file": "sentencepiece.bpe.model"}
 
 PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {
-        "indobart": "https://huggingface.co/indobart/resolve/main/sentencepiece.bpe.model",
-        "indogpt": "https://huggingface.co/indogptresolve/main/sentencepiece.bpe.model",
-        "indobart-v2": "https://huggingface.co/indobart-v2/resolve/main/sentencepiece.bpe.model"
+        "indobenchmark/indobart": "https://huggingface.co/indobenchmark/indobart/resolve/main/sentencepiece.bpe.model",
+        "indobenchmark/indogpt": "https://huggingface.co/indobenchmark/indogpt/resolve/main/sentencepiece.bpe.model",
+        "indobenchmark/indobart-v2": "https://huggingface.co/indobenchmark/indobart-v2/resolve/main/sentencepiece.bpe.model"
     }
 }
 
 PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
     "indobenchmark/indobart": 768,
-    "ndobenchmark/indogpt": 768,
+    "indobenchmark/indogpt": 768,
     "indobenchmark/indobart-v2": 768
 }
 
@@ -173,9 +173,11 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
             lang_id = self.special_tokens_to_ids[lang_token]
             input_batch = self(inputs, return_attention_mask=False)
             if type(inputs) == str:
-                input_batch['input_ids'] = [self.eos_token_id, lang_id] + input_batch['input_ids'] 
+                input_batch['input_ids'] = input_batch['input_ids'] + [self.eos_token_id, lang_id]
             else:
-                input_batch['input_ids'] = list(map(lambda input_ids: input_ids + [self.eos_token_id, lang_id], input_batch['input_ids']))
+                input_batch['input_ids'] = list(map(
+                    lambda input_ids: input_ids + [self.eos_token_id, lang_id], 
+                    input_batch['input_ids']))
             
             if decoder_inputs is None:
                 # Return encoder input
