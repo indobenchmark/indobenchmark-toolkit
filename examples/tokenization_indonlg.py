@@ -92,27 +92,24 @@ class IndoNLGTokenizer(CamembertTokenizer):
         # HACK: These tokens were added by fairseq but don't seem to be actually used when duplicated in the actual
         # sentencepiece vocabulary (this is the case for <s> and </s>
         self.special_tokens_to_ids = {
-            "[english]": 7, # Replacing NULL token
-            "[java]": len(self.sp_model), 
-            "[sunda]": len(self.sp_model) + 1, 
-            "[indonesia]": len(self.sp_model) + 2,
-            "<mask>": len(self.sp_model) + 3
+            "[javanese]": 40000, 
+            "[sundanese]": 40001, 
+            "[indonesian]": 40002,
+            "<mask>": 40003
         }
         self.special_ids_to_tokens = {v: k for k, v in self.special_tokens_to_ids.items()}
         
         # Store Language token ID
-        self.english_token = '[english]'
-        self.english_token_id = 7
         self.javanese_token = '[javanese]'
-        self.javanese_token_id = len(self.sp_model)
+        self.javanese_token_id = 40000
         self.sundanese_token = '[sundanese]'
-        self.sundanese_token_id = len(self.sp_model) + 1
-        self.indonesian_token = '[indonesia]'
-        self.indonesian_token_id = len(self.sp_model) + 2
+        self.sundanese_token_id = 40001
+        self.indonesian_token = '[indonesian]'
+        self.indonesian_token_id = 40002
         
         self.special_token_ids = [
             self.bos_token_id, self.eos_token_id, self.sep_token_id, self.cls_token_id, 
-            self.unk_token_id, self.pad_token_id, self.mask_token_id, self.english_token_id,
+            self.unk_token_id, self.pad_token_id, self.mask_token_id, 
             self.javanese_token_id, self.sundanese_token_id, self.indonesian_token_id
         ]
     
