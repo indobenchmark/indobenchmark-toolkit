@@ -115,7 +115,8 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         ]
     
     def prepare_input_for_generation(self, inputs, model_type='indobart', lang_token='[indonesian]', decoder_inputs=None,
-                                             decoder_lang_token='[indonesian]', padding='longest', return_tensors=None):
+                                             decoder_lang_token='[indonesian]', padding='longest', return_tensors=None,
+                                                bart_additional_mask=False):
         """
         Build model inputs for a specified `model_type`. There are two possible `model_type`, i.e., indobart and indogpt.
         
@@ -161,6 +162,9 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
             else:
                 raise ValueError(IndoNLGTokenizer.input_error_message)
         elif model_type == 'indobart':
+                                     
+            default_eos_token = [self.mask_token_id, self.eos_token_id] if bart_additional_mask else [self.eos_token_id]
+
             # Process encoder input
             if lang_token not in self.special_tokens_to_ids:
                 raise ValueError(f"Unknown lang_token `{lang_token}`, lang_token must be either `[javanese]`, `[sundanese]`, or `[indonesian]`")  
@@ -173,11 +177,9 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
             lang_id = self.special_tokens_to_ids[lang_token]
             input_batch = self(inputs, return_attention_mask=False)
             if type(inputs) == str:
-                input_batch['input_ids'] = input_batch['input_ids'] + [self.eos_token_id, lang_id]
+                input_batch['input_ids'] = [self.bos_token_id] + input_batch['input_ids'] + default_eos_token + [lang_id]
             else:
-                input_batch['input_ids'] = list(map(
-                    lambda input_ids: input_ids + [self.eos_token_id, lang_id], 
-                    input_batch['input_ids']))
+                input_batch['input_ids'] = list(map(lambda input_ids: [self.bos_token_id] + input_ids + default_eos_token + [lang_id], input_batch['input_ids']))
             
             if decoder_inputs is None:
                 # Return encoder input
@@ -198,10 +200,9 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
                 decoder_input_batch = self(decoder_inputs, return_attention_mask=False)
                 
                 if type(decoder_inputs) == str:
-                    decoder_input_batch['input_ids'] = [lang_id] + decoder_input_batch['input_ids']  + [self.eos_token_id]
+                    decoder_input_batch['input_ids'] = [lang_id, self.bos_token_id] + decoder_input_batch['input_ids']  + default_eos_token
                 else:
-                    decoder_input_batch['input_ids'] = list(map(lambda input_ids: [lang_id] + input_ids + [self.eos_token_id], decoder_input_batch['input_ids']))
-                
+                    decoder_input_batch['input_ids'] = list(map(lambda input_ids: [lang_id, self.bos_token_id] + input_ids  + default_eos_token, decoder_input_batch['input_ids']))
                 # Padding
                 input_batch = self.pad(input_batch, return_tensors=return_tensors)
                 decoder_input_batch = self.pad(decoder_input_batch, return_tensors=return_tensors)
