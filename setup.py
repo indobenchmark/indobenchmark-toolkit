@@ -24,7 +24,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        "transformers>=4.0.1",
+        "transformers>=4.3.2",
         "sentencepiece==0.1.95",
         "datasets==1.4.1",
         "torch>=1.7.1"
