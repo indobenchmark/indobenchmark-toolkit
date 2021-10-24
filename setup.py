@@ -1,12 +1,13 @@
 import os
 import setuptools
+from src.indobenchmark.version import __version__
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="indobenchmark-toolkit",
-    version="0.0.3",
+    version=__version__,
     author="Samuel Cahyawijaya",
     author_email="samuel.cahyawijaya@gmail.com",
     description="Indobenchmark toolkit for supporting IndoNLU and IndoNLG",
