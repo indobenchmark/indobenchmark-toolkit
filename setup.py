@@ -1,6 +1,7 @@
-import os
+import os, sys
+sys.path.append('./src')
 import setuptools
-from src.indobenchmark.version import __version__
+from indobenchmark.version import __version__
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
