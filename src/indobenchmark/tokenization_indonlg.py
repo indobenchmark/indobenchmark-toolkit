@@ -174,9 +174,9 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
             lang_id = self.special_tokens_to_ids[lang_token]
             input_batch = self(inputs, return_attention_mask=False)
             if type(inputs) == str:
-                input_batch['input_ids'] = [self.bos_token_id] + input_batch['input_ids'] + [lang_id]
+                input_batch['input_ids'] = [self.bos_token_id] + input_batch['input_ids'] + [self.eos_token_id, lang_id]
             else:
-                input_batch['input_ids'] = list(map(lambda input_ids: [self.bos_token_id] + input_ids + [lang_id], input_batch['input_ids']))
+                input_batch['input_ids'] = list(map(lambda input_ids: [self.bos_token_id] + input_ids + [self.eos_token_id, lang_id], input_batch['input_ids']))
             
             if decoder_inputs is None:
                 # Return encoder input
@@ -197,9 +197,9 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
                 decoder_input_batch = self(decoder_inputs, return_attention_mask=False)
                 
                 if type(decoder_inputs) == str:
-                    decoder_input_batch['input_ids'] = [lang_id, self.bos_token_id] + decoder_input_batch['input_ids'] 
+                    decoder_input_batch['input_ids'] = [lang_id, self.bos_token_id] + decoder_input_batch['input_ids'] + [self.eos_token_id]
                 else:
-                    decoder_input_batch['input_ids'] = list(map(lambda input_ids: [lang_id, self.bos_token_id] + input_ids , decoder_input_batch['input_ids']))
+                    decoder_input_batch['input_ids'] = list(map(lambda input_ids: [lang_id, self.bos_token_id] + input_ids + [self.eos_token_id], decoder_input_batch['input_ids']))
                 # Padding
                 input_batch = self.pad(input_batch, return_tensors=return_tensors)
                 decoder_input_batch = self.pad(decoder_input_batch, return_tensors=return_tensors)
