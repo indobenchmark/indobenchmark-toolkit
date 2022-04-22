@@ -25,8 +25,8 @@ setuptools.setup(
     ],
     install_requires=[
         "transformers>=4.3.2",
-        "sentencepiece==0.1.95",
-        "datasets==1.4.1",
+        "sentencepiece>=0.1.95",
+        "datasets>=1.4.1",
         "torch>=1.7.1"
     ],
     package_dir={"": "src"},

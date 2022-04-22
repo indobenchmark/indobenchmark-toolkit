@@ -3,6 +3,44 @@
 
 <b>Indobenchmark</b> are collections of Natural Language Understanding (IndoNLU) and Natural Language Generation (IndoNLG) resources for Bahasa Indonesia such as Institut Teknologi Bandung, Universitas Multimedia Nusantara, The Hong Kong University of Science and Technology, Universitas Indonesia, DeepMind, Gojek, and Prosa.AI.
 
+## Toolkit Modules
+#### IndoNLGTokenizer
+<b>IndoNLGTokenizer</b>  is the tokenizer used by both IndoBART and IndoGPT models. 
+The example for using the IndoNLGTokenizer is shown as follow:
+
+- IndoNLGTokenizer for IndoGPT
+```python
+## Encode ##
+from indobenchmark import IndoNLGTokenizer
+tokenizer = IndoNLGTokenizer.from_pretrained('indobenchmark/indogpt')
+inputs = tokenizer.prepare_input_for_generation('hai, bagaimana kabar', model_type='indogpt', return_tensors='pt')
+# inputs: {'input_ids': tensor([[    0,  4693, 39956,  1119,  3447]]), 'attention_mask': tensor([[1, 1, 1, 1, 1]])}
+
+## Decode ##
+from indobenchmark import IndoNLGTokenizer
+tokenizer = IndoNLGTokenizer.from_pretrained('indobenchmark/indogpt')
+text = tokenizer.decode([0,  4693, 39956,  1119,  3447])
+# text: '<s> hai, bagaimana kabar'
+```
+
+- IndoNLGTokenizer for IndoBART
+```python
+## Encode ##
+from indobenchmark import IndoNLGTokenizer
+tokenizer = IndoNLGTokenizer.from_pretrained('indobenchmark/indobart')
+inputs = tokenizer.prepare_input_for_generation('hai, bagaimana kabar', return_tensors='pt', 
+                       lang_token = '[indonesian]', decoder_lang_token='[indonesian]')
+# inputs: {'input_ids': tensor([    0,  4693, 39956,  1119,  3447,     2, 40002]), 'attention_mask': tensor([1, 1, 1, 1, 1, 1, 1])}
+
+## Decode ##
+from indobenchmark import IndoNLGTokenizer
+tokenizer = IndoNLGTokenizer.from_pretrained('indobenchmark/indobart')
+text = tokenizer.decode([0,  4693, 39956,  1119,  3447, 2, 40002])
+# text: '<s> hai, bagaimana kabar </s> [indonesian]'
+```
+
+**note**: IndoNLGTokenizer will automatically lower case the text input since both the IndoNLGTokenizer, the IndoBart, and the IndoGPT models  are only trained on lower-cased texts.
+
 ## Research Paper
 IndoNLU has been accepted by AACL-IJCNLP 2020 and you can find the details in our paper https://www.aclweb.org/anthology/2020.aacl-main.85.pdf.
 If you are using any component on IndoNLU including Indo4B, FastText-Indo4B, or IndoBERT in your work, please cite the following paper:

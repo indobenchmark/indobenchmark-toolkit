@@ -247,7 +247,7 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         return vocab
 
     def _tokenize(self, text: str) -> List[str]:
-        return self.sp_model.encode(text, out_type=str)
+        return self.sp_model.encode(text.lower(), out_type=str)
     
     def _convert_token_to_id(self, token):
         """ Converts a token (str) in an id using the vocab. """
@@ -263,7 +263,12 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         if index in self.special_ids_to_tokens:
             return self.special_ids_to_tokens[index]
         
-        return self.sp_model.IdToPiece(index)
+        token = self.sp_model.IdToPiece(index)
+        if '<0x' in token:
+            char_rep = chr(int(token[1:-1], 0))
+            if char_rep.isprintable():
+                return char_rep
+        return token
     
     def __getstate__(self):
         state = self.__dict__.copy()
