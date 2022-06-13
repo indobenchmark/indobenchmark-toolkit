@@ -46,7 +46,7 @@ from transformers.utils import (
 import sentencepiece as spm
 
 from transformers.utils import logging
-
+from transformers.utils.generic import _is_jax, _is_numpy, _is_tensorflow, _is_torch, _is_torch_device
 
 logger = logging.get_logger(__name__)
 
@@ -87,7 +87,7 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
     vocab_files_names = VOCAB_FILES_NAMES
     pretrained_vocab_files_map = PRETRAINED_VOCAB_FILES_MAP
     max_model_input_sizes = PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES
-    model_input_names=['input_ids', 'attention_mask', 'decoder_input_ids', 'decoder_attention_mask']
+    model_input_names=['input_ids', 'attention_mask', 'decoder_input_ids', 'decoder_attention_mask', 'labels']
     input_error_message = "text input must of type `str` (single example), `List[str]` (batch of examples)."
 
     def __init__(
@@ -229,16 +229,25 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
                 decoder_input_batch = self(decoder_inputs, return_attention_mask=False)
                 
                 if type(decoder_inputs) == str:
+                    labels = [self.bos_token_id] + decoder_input_batch['input_ids'] + [self.eos_token_id, decoder_lang_id]
                     decoder_input_batch['input_ids'] = [decoder_lang_id, self.bos_token_id] + decoder_input_batch['input_ids'] + [self.eos_token_id]
                 else:
-                    decoder_input_batch['input_ids'] = list(map(lambda input_ids: [lang_id, self.bos_token_id] + input_ids + [self.eos_token_id], decoder_input_batch['input_ids']))
+                    labels = list(map(lambda input_ids: [self.bos_token_id] + input_ids + [self.eos_token_id, decoder_lang_id], decoder_input_batch['input_ids']))
+                    decoder_input_batch['input_ids'] = list(map(lambda input_ids: [decoder_lang_id, self.bos_token_id] + input_ids + [self.eos_token_id], decoder_input_batch['input_ids']))
+                    
                 # Padding
                 input_batch = self.pad(input_batch, return_tensors=return_tensors)
                 decoder_input_batch = self.pad(decoder_input_batch, return_tensors=return_tensors)
+                labels = self.pad({'input_ids': labels}, return_tensors=return_tensors)['input_ids']
+                if not isinstance(labels, (list, tuple)):
+                    labels[labels == self.pad_token_id] = -100
+                else:
+                    labels = list(map(lambda x: -100 if x == self.pad_token_id else x, labels))
                 
                 # Store into a single dict
                 input_batch['decoder_input_ids'] = decoder_input_batch['input_ids']
                 input_batch['decoder_attention_mask'] = decoder_input_batch['attention_mask']
+                input_batch['labels'] = labels
                 
                 return input_batch
 
@@ -360,9 +369,6 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
 
         required_input = encoded_inputs[self.model_input_names[2]]
 
-        if padding_strategy == PaddingStrategy.LONGEST:
-            max_length = len(required_input)
-
         if max_length is not None and pad_to_multiple_of is not None and (max_length % pad_to_multiple_of != 0):
             max_length = ((max_length // pad_to_multiple_of) + 1) * pad_to_multiple_of
 
@@ -385,6 +391,9 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
                 if "decoder_special_tokens_mask" in encoded_inputs:
                     encoded_inputs["decoder_special_tokens_mask"] = encoded_inputs["decoder_special_tokens_mask"] + [1] * difference
                 encoded_inputs[self.model_input_names[2]] = required_input + [self.pad_token_id] * difference
+                
+                label_input = encoded_inputs[self.model_input_names[4]]
+                encoded_inputs[self.model_input_names[4]] = label_input + [-100] * difference
             elif self.padding_side == "left":
                 if return_attention_mask:
                     encoded_inputs["decoder_attention_mask"] = [0] * difference + encoded_inputs["decoder_attention_mask"]
@@ -395,6 +404,9 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
                 if "decoder_special_tokens_mask" in encoded_inputs:
                     encoded_inputs["decoder_special_tokens_mask"] = [1] * difference + encoded_inputs["decoder_special_tokens_mask"]
                 encoded_inputs[self.model_input_names[2]] = [self.pad_token_id] * difference + required_input
+                
+                label_input = encoded_inputs[self.model_input_names[4]]
+                encoded_inputs[self.model_input_names[4]] = label_input + [-100] * difference
             else:
                 raise ValueError("Invalid padding strategy:" + str(self.padding_side))
 
