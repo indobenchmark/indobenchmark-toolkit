@@ -333,7 +333,7 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         outputs = super().decode(inputs, skip_special_tokens=False)
         self.decode_special_token = prev_val
         
-        return outputs.replace('▁','').strip()
+        return outputs.replace(' ','').replace('▁', ' ')
     
     def _pad_decoder(
         self,
