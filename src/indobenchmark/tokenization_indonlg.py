@@ -309,10 +309,8 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         """
         if isinstance(ids, int):
             if ids not in self.added_tokens_decoder or ids in self.special_tokens_to_ids:
-                print('is int', ids, skip_special_tokens)
                 return self._convert_id_to_token(ids, skip_special_tokens=skip_special_tokens)
             else:
-                print('add token decoder', ids, skip_special_tokens)
                 return self.added_tokens_decoder[ids]
         tokens = []
         for index in ids:
@@ -320,12 +318,9 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
             if skip_special_tokens and index in (self.all_special_ids + list(self.special_tokens_to_ids.values())):
                 continue
             if index not in self.added_tokens_decoder or index in self.special_tokens_to_ids:
-                print('is list', index, skip_special_tokens)
                 tokens.append(self._convert_id_to_token(index, skip_special_tokens=skip_special_tokens))                
             else:
-                print('list add token decoder', index, skip_special_tokens)
                 tokens.append(self.added_tokens_decoder[index])
-        print()
         return tokens
     
     def _convert_token_to_id(self, token):
