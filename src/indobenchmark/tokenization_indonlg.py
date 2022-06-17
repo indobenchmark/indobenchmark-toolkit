@@ -101,7 +101,7 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         unk_token="<unk>",
         pad_token="<pad>",
         mask_token="<mask>",
-        additional_special_tokens=["[java]","[sunda]","[indonesia]","<mask>"],
+        additional_special_tokens=[],
         **kwargs
     ):
         super().__init__(
@@ -251,6 +251,9 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
                 
                 return input_batch
 
+    def __len__(self):
+        return max(self.special_ids_to_tokens) + 1
+    
     def get_special_tokens_mask(
         self, token_ids_0: List[int], token_ids_1: Optional[List[int]] = None, already_has_special_tokens: bool = False
     ) -> List[int]:
@@ -290,15 +293,50 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
     def _tokenize(self, text: str) -> List[str]:
         return self.sp_model.encode(text.lower(), out_type=str)
     
+    def convert_ids_to_tokens(
+        self, ids: Union[int, List[int]], skip_special_tokens: bool = False
+    ) -> Union[str, List[str]]:
+        """
+        Converts a single index or a sequence of indices in a token or a sequence of tokens, using the vocabulary and
+        added tokens.
+        Args:
+            ids (`int` or `List[int]`):
+                The token id (or token ids) to convert to tokens.
+            skip_special_tokens (`bool`, *optional*, defaults to `False`):
+                Whether or not to remove special tokens in the decoding.
+        Returns:
+            `str` or `List[str]`: The decoded token(s).
+        """
+        if isinstance(ids, int):
+            if ids not in self.added_tokens_decoder or ids in self.special_tokens_to_ids:
+                print('is int', ids, skip_special_tokens)
+                return self._convert_id_to_token(ids, skip_special_tokens=skip_special_tokens)
+            else:
+                print('add token decoder', ids, skip_special_tokens)
+                return self.added_tokens_decoder[ids]
+        tokens = []
+        for index in ids:
+            index = int(index)
+            if skip_special_tokens and index in (self.all_special_ids + list(self.special_tokens_to_ids.values())):
+                continue
+            if index not in self.added_tokens_decoder or index in self.special_tokens_to_ids:
+                print('is list', index, skip_special_tokens)
+                tokens.append(self._convert_id_to_token(index, skip_special_tokens=skip_special_tokens))                
+            else:
+                print('list add token decoder', index, skip_special_tokens)
+                tokens.append(self.added_tokens_decoder[index])
+        print()
+        return tokens
+    
     def _convert_token_to_id(self, token):
         """ Converts a token (str) in an id using the vocab. """
         if token in self.special_tokens_to_ids:
             return self.special_tokens_to_ids[token]
         return self.sp_model.PieceToId(token)
     
-    def _convert_id_to_token(self, index):
+    def _convert_id_to_token(self, index, skip_special_tokens=False):
         """Converts an index (integer) in a token (str) using the vocab."""
-        if not self.decode_special_token and index in self.special_token_ids:
+        if skip_special_tokens and index in self.special_token_ids:
             return ''
             
         if index in self.special_ids_to_tokens:
@@ -326,13 +364,8 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         self.sp_model = spm.SentencePieceProcessor(**self.sp_model_kwargs)
         self.sp_model.Load(self.vocab_file)
 
-    def decode(self, inputs, skip_special_tokens=False):
-        prev_val = self.decode_special_token
-        self.decode_special_token = not skip_special_tokens
-        
-        outputs = super().decode(inputs, skip_special_tokens=False)
-        self.decode_special_token = prev_val
-        
+    def decode(self, inputs, skip_special_tokens=False):     
+        outputs = super().decode(inputs, skip_special_tokens=skip_special_tokens)
         return outputs.replace(' ','').replace('▁', ' ')
     
     def _pad_decoder(
