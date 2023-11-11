@@ -27,7 +27,7 @@ from transformers import (
 )
 import sentencepiece as spm
 
-from transformers.utils import logging
+from transformers.utils import logging, to_py_obj
 from transformers.utils.generic import _is_tensorflow, _is_torch
 
 logger = logging.get_logger(__name__)
@@ -65,24 +65,6 @@ TextInputPair = Tuple[str, str]
 PreTokenizedInputPair = Tuple[List[str], List[str]]
 EncodedInputPair = Tuple[List[int], List[int]]
 
-def to_py_obj(obj):
-    """
-    Convert a TensorFlow tensor, PyTorch tensor, Numpy array or python list to a python list.
-    """
-    if isinstance(obj, (dict, UserDict)):
-        return {k: to_py_obj(v) for k, v in obj.items()}
-    elif isinstance(obj, (list, tuple)):
-        return [to_py_obj(o) for o in obj]
-    elif is_tf_tensor(obj):
-        return obj.numpy().tolist()
-    elif is_torch_tensor(obj):
-        return obj.detach().cpu().tolist()
-    elif is_jax_tensor(obj):
-        return np.asarray(obj).tolist()
-    elif isinstance(obj, (np.ndarray, np.number)):  # tolist also works on 0d np arrays
-        return obj.tolist()
-    else:
-        return obj
     
 class IndoNLGTokenizer(PreTrainedTokenizer):
     vocab_files_names = VOCAB_FILES_NAMES
