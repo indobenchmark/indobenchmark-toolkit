@@ -105,18 +105,6 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         additional_special_tokens=[],
         **kwargs
     ):
-        super().__init__(
-            vocab_file=vocab_file,
-            bos_token=bos_token,
-            eos_token=eos_token,
-            unk_token=unk_token,
-            sep_token=sep_token,
-            cls_token=cls_token,
-            pad_token=pad_token,
-            mask_token=mask_token,
-            additional_special_tokens=additional_special_tokens,
-            **kwargs,
-        )
         self.sp_model = spm.SentencePieceProcessor()
         self.sp_model.Load(str(vocab_file))
         self.vocab_file = vocab_file
@@ -132,6 +120,19 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
             "<mask>": 40003
         }
         self.special_ids_to_tokens = {v: k for k, v in self.special_tokens_to_ids.items()}
+
+        super().__init__(
+            vocab_file=vocab_file,
+            bos_token=bos_token,
+            eos_token=eos_token,
+            unk_token=unk_token,
+            sep_token=sep_token,
+            cls_token=cls_token,
+            pad_token=pad_token,
+            mask_token=mask_token,
+            additional_special_tokens=additional_special_tokens,
+            **kwargs,
+        )
         
         # Store Language token ID
         self.javanese_token = '[javanese]'
@@ -611,3 +612,16 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
                 batch_outputs[key].append(value)
 
         return BatchEncoding(batch_outputs, tensor_type=return_tensors)
+
+    @property
+    def default_chat_template(self):
+        """
+        A simple chat template that ignores role information and just concatenates messages with EOS tokens.
+        """
+        logger.warning_once(
+            "\nNo chat template is defined for this tokenizer - using the default template "
+            f"for the {self.__class__.__name__} class. If the default is not appropriate for "
+            "your model, please set `tokenizer.chat_template` to an appropriate template. "
+            "See https://huggingface.co/docs/transformers/main/chat_templating for more information.\n"
+        )
+        return "{% for message in messages %}" "{{ message.content }}{{ eos_token }}" "{% endfor %}"
