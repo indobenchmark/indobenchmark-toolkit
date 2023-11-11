@@ -20,33 +20,15 @@ from typing import TYPE_CHECKING, Any, Dict, List, NamedTuple, Optional, Sequenc
 from transformers import PreTrainedTokenizer, BatchEncoding
 
 from collections.abc import Mapping
-from transformers.utils import (
-    EntryNotFoundError,
-    ExplicitEnum,
-    PaddingStrategy,
-    PushToHubMixin,
-    RepositoryNotFoundError,
-    RevisionNotFoundError,
-    TensorType,
-    add_end_docstrings,
-    cached_path,
-    copy_func,
-    get_file_from_repo,
-    hf_bucket_url,
-    is_flax_available,
-    is_offline_mode,
-    is_remote_url,
+from transformers.tokenization_utils import PaddingStrategy, TensorType
+from transformers import (
     is_tf_available,
-    is_tokenizers_available,
-    is_torch_available,
-    logging,
-    to_py_obj,
-    torch_required,
+    is_torch_available
 )
 import sentencepiece as spm
 
 from transformers.utils import logging
-from transformers.utils.generic import _is_jax, _is_numpy, _is_tensorflow, _is_torch, _is_torch_device
+from transformers.utils.generic import _is_tensorflow, _is_torch
 
 logger = logging.get_logger(__name__)
 
@@ -83,6 +65,25 @@ TextInputPair = Tuple[str, str]
 PreTokenizedInputPair = Tuple[List[str], List[str]]
 EncodedInputPair = Tuple[List[int], List[int]]
 
+def to_py_obj(obj):
+    """
+    Convert a TensorFlow tensor, PyTorch tensor, Numpy array or python list to a python list.
+    """
+    if isinstance(obj, (dict, UserDict)):
+        return {k: to_py_obj(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [to_py_obj(o) for o in obj]
+    elif is_tf_tensor(obj):
+        return obj.numpy().tolist()
+    elif is_torch_tensor(obj):
+        return obj.detach().cpu().tolist()
+    elif is_jax_tensor(obj):
+        return np.asarray(obj).tolist()
+    elif isinstance(obj, (np.ndarray, np.number)):  # tolist also works on 0d np arrays
+        return obj.tolist()
+    else:
+        return obj
+    
 class IndoNLGTokenizer(PreTrainedTokenizer):
     vocab_files_names = VOCAB_FILES_NAMES
     pretrained_vocab_files_map = PRETRAINED_VOCAB_FILES_MAP
