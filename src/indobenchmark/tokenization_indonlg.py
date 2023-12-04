@@ -86,18 +86,6 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         additional_special_tokens=[],
         **kwargs
     ):
-        super().__init__(
-            vocab_file=vocab_file,
-            bos_token=bos_token,
-            eos_token=eos_token,
-            unk_token=unk_token,
-            sep_token=sep_token,
-            cls_token=cls_token,
-            pad_token=pad_token,
-            mask_token=mask_token,
-            additional_special_tokens=additional_special_tokens,
-            **kwargs,
-        )
         self.sp_model = spm.SentencePieceProcessor()
         self.sp_model.Load(str(vocab_file))
         self.vocab_file = vocab_file
@@ -122,6 +110,18 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         self.indonesian_token = '[indonesian]'
         self.indonesian_token_id = 40002
         
+        super().__init__(
+            vocab_file=vocab_file,
+            bos_token=bos_token,
+            eos_token=eos_token,
+            unk_token=unk_token,
+            sep_token=sep_token,
+            cls_token=cls_token,
+            pad_token=pad_token,
+            mask_token=mask_token,
+            additional_special_tokens=additional_special_tokens,
+            **kwargs,
+        )
         self.special_token_ids = [
             self.bos_token_id, self.eos_token_id, self.sep_token_id, self.cls_token_id, 
             self.unk_token_id, self.pad_token_id, self.mask_token_id,
