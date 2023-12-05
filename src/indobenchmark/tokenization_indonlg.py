@@ -15,37 +15,19 @@
 """ Tokenization classes for IndoNLG model."""
 
 import os
-from shutil import copyfile
 from typing import TYPE_CHECKING, Any, Dict, List, NamedTuple, Optional, Sequence, Tuple, Union
 from transformers import PreTrainedTokenizer, BatchEncoding
 
 from collections.abc import Mapping
 from transformers.utils import (
-    EntryNotFoundError,
-    ExplicitEnum,
     PaddingStrategy,
-    PushToHubMixin,
-    RepositoryNotFoundError,
-    RevisionNotFoundError,
     TensorType,
-    add_end_docstrings,
-    cached_path,
-    copy_func,
-    get_file_from_repo,
-    hf_bucket_url,
-    is_flax_available,
-    is_offline_mode,
-    is_remote_url,
     is_tf_available,
-    is_tokenizers_available,
     is_torch_available,
     logging,
     to_py_obj,
-    torch_required,
 )
 import sentencepiece as spm
-
-from transformers.utils import logging
 from transformers.utils.generic import _is_jax, _is_numpy, _is_tensorflow, _is_torch, _is_torch_device
 
 logger = logging.get_logger(__name__)
@@ -104,18 +86,6 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         additional_special_tokens=[],
         **kwargs
     ):
-        super().__init__(
-            vocab_file=vocab_file,
-            bos_token=bos_token,
-            eos_token=eos_token,
-            unk_token=unk_token,
-            sep_token=sep_token,
-            cls_token=cls_token,
-            pad_token=pad_token,
-            mask_token=mask_token,
-            additional_special_tokens=additional_special_tokens,
-            **kwargs,
-        )
         self.sp_model = spm.SentencePieceProcessor()
         self.sp_model.Load(str(vocab_file))
         self.vocab_file = vocab_file
@@ -140,6 +110,18 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         self.indonesian_token = '[indonesian]'
         self.indonesian_token_id = 40002
         
+        super().__init__(
+            vocab_file=vocab_file,
+            bos_token=bos_token,
+            eos_token=eos_token,
+            unk_token=unk_token,
+            sep_token=sep_token,
+            cls_token=cls_token,
+            pad_token=pad_token,
+            mask_token=mask_token,
+            additional_special_tokens=additional_special_tokens,
+            **kwargs,
+        )
         self.special_token_ids = [
             self.bos_token_id, self.eos_token_id, self.sep_token_id, self.cls_token_id, 
             self.unk_token_id, self.pad_token_id, self.mask_token_id,
