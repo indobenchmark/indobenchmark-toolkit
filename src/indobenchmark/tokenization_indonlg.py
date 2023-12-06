@@ -15,7 +15,6 @@
 """ Tokenization classes for IndoNLG model."""
 
 import os
-from shutil import copyfile
 from typing import TYPE_CHECKING, Any, Dict, List, NamedTuple, Optional, Sequence, Tuple, Union
 from transformers import PreTrainedTokenizer, BatchEncoding
 
