@@ -341,8 +341,8 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         self.sp_model = spm.SentencePieceProcessor(**self.sp_model_kwargs)
         self.sp_model.Load(self.vocab_file)
 
-    def decode(self, inputs, skip_special_tokens=False):     
-        outputs = super().decode(inputs, skip_special_tokens=skip_special_tokens)
+    def decode(self, inputs, skip_special_tokens=False, **kwargs):     
+        outputs = super().decode(inputs, skip_special_tokens=skip_special_tokens, **kwargs)
         return outputs.replace(' ','').replace('▁', ' ')
     
     def _pad_decoder(
