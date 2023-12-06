@@ -21,11 +21,9 @@ from transformers import PreTrainedTokenizer, BatchEncoding
 
 from collections.abc import Mapping
 from transformers.tokenization_utils import PaddingStrategy, TensorType
-from transformers import (
-    is_tf_available,
-    is_torch_available
-)
+from transformers import is_tf_available, is_torch_available
 import sentencepiece as spm
+import numpy as np
 
 from transformers.utils import logging, to_py_obj
 from transformers.utils.generic import _is_tensorflow, _is_torch
@@ -102,7 +100,15 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
             "<mask>": 40003
         }
         self.special_ids_to_tokens = {v: k for k, v in self.special_tokens_to_ids.items()}
-
+        
+        # Store Language token ID
+        self.javanese_token = '[javanese]'
+        self.javanese_token_id = 40000
+        self.sundanese_token = '[sundanese]'
+        self.sundanese_token_id = 40001
+        self.indonesian_token = '[indonesian]'
+        self.indonesian_token_id = 40002
+        
         super().__init__(
             vocab_file=vocab_file,
             bos_token=bos_token,
@@ -115,15 +121,6 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
             additional_special_tokens=additional_special_tokens,
             **kwargs,
         )
-        
-        # Store Language token ID
-        self.javanese_token = '[javanese]'
-        self.javanese_token_id = 40000
-        self.sundanese_token = '[sundanese]'
-        self.sundanese_token_id = 40001
-        self.indonesian_token = '[indonesian]'
-        self.indonesian_token_id = 40002
-        
         self.special_token_ids = [
             self.bos_token_id, self.eos_token_id, self.sep_token_id, self.cls_token_id, 
             self.unk_token_id, self.pad_token_id, self.mask_token_id,
