@@ -19,16 +19,13 @@ from typing import TYPE_CHECKING, Any, Dict, List, NamedTuple, Optional, Sequenc
 from transformers import PreTrainedTokenizer, BatchEncoding
 
 from collections.abc import Mapping
-from transformers.utils import (
-    PaddingStrategy,
-    TensorType,
-    is_tf_available,
-    is_torch_available,
-    logging,
-    to_py_obj,
-)
+from transformers.tokenization_utils import PaddingStrategy, TensorType
+from transformers import is_tf_available, is_torch_available
 import sentencepiece as spm
-from transformers.utils.generic import _is_jax, _is_numpy, _is_tensorflow, _is_torch, _is_torch_device
+import numpy as np
+
+from transformers.utils import logging, to_py_obj
+from transformers.utils.generic import _is_tensorflow, _is_torch
 
 logger = logging.get_logger(__name__)
 
@@ -65,6 +62,7 @@ TextInputPair = Tuple[str, str]
 PreTokenizedInputPair = Tuple[List[str], List[str]]
 EncodedInputPair = Tuple[List[int], List[int]]
 
+    
 class IndoNLGTokenizer(PreTrainedTokenizer):
     vocab_files_names = VOCAB_FILES_NAMES
     pretrained_vocab_files_map = PRETRAINED_VOCAB_FILES_MAP
@@ -341,8 +339,8 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
         self.sp_model = spm.SentencePieceProcessor(**self.sp_model_kwargs)
         self.sp_model.Load(self.vocab_file)
 
-    def decode(self, inputs, skip_special_tokens=False):     
-        outputs = super().decode(inputs, skip_special_tokens=skip_special_tokens)
+    def decode(self, inputs, skip_special_tokens=False, **kwargs):     
+        outputs = super().decode(inputs, skip_special_tokens=skip_special_tokens, **kwargs)
         return outputs.replace(' ','').replace('▁', ' ')
     
     def _pad_decoder(
@@ -592,3 +590,33 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
                 batch_outputs[key].append(value)
 
         return BatchEncoding(batch_outputs, tensor_type=return_tensors)
+    
+    def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
+        if not os.path.isdir(save_directory):
+            logger.error(f"Vocabulary path ({save_directory}) should be a directory")
+            return
+        out_vocab_file = os.path.join(
+            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["vocab_file"]
+        )
+
+        if os.path.abspath(self.vocab_file) != os.path.abspath(out_vocab_file) and os.path.isfile(self.vocab_file):
+            copyfile(self.vocab_file, out_vocab_file)
+        elif not os.path.isfile(self.vocab_file):
+            with open(out_vocab_file, "wb") as fi:
+                content_spiece_model = self.sp_model.serialized_model_proto()
+                fi.write(content_spiece_model)
+
+        return (out_vocab_file,)
+
+    @property
+    def default_chat_template(self):
+        """
+        A simple chat template that ignores role information and just concatenates messages with EOS tokens.
+        """
+        logger.warning_once(
+            "\nNo chat template is defined for this tokenizer - using the default template "
+            f"for the {self.__class__.__name__} class. If the default is not appropriate for "
+            "your model, please set `tokenizer.chat_template` to an appropriate template. "
+            "See https://huggingface.co/docs/transformers/main/chat_templating for more information.\n"
+        )
+        return "{% for message in messages %}" "{{ message.content }}{{ eos_token }}" "{% endfor %}"
