@@ -293,7 +293,7 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
             if ids not in self.added_tokens_decoder or ids in self.special_tokens_to_ids:
                 return self._convert_id_to_token(ids, skip_special_tokens=skip_special_tokens)
             else:
-                return self.added_tokens_decoder[ids]
+                return self.added_tokens_decoder[ids].content
         tokens = []
         for index in ids:
             index = int(index)
@@ -302,7 +302,7 @@ class IndoNLGTokenizer(PreTrainedTokenizer):
             if index not in self.added_tokens_decoder or index in self.special_tokens_to_ids:
                 tokens.append(self._convert_id_to_token(index, skip_special_tokens=skip_special_tokens))                
             else:
-                tokens.append(self.added_tokens_decoder[index])
+                tokens.append(self.added_tokens_decoder[index].content)
         return tokens
     
     def _convert_token_to_id(self, token):
